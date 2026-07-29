@@ -5,14 +5,24 @@ import (
 	"net/http"
 
 	"github.com/behshadrhp/Shadina/internal/consts"
+	"github.com/behshadrhp/Shadina/internal/storage"
 )
 
 type application struct {
-	config config
+	config  config
+	storage storage.Storage
 }
 
 type config struct {
 	addr string
+	db   dbConfig
+}
+
+type dbConfig struct {
+	addr           string
+	maxOpenConns   int
+	maxIdleConns   int
+	maxIdleTimeout string
 }
 
 func (app *application) run(mux *http.Handler) error {
