@@ -1,0 +1,16 @@
+services:
+  postgresql:
+    container_name: shadina-postgres
+    image: postgres:18.4
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shadina
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    
+volumes:
+  postgres_data:
