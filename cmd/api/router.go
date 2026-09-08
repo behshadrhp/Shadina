@@ -18,8 +18,9 @@ func (app *application) mount() http.Handler {
 
 	// handlers
 	router.Route("/v1", func(r chi.Router) {
+
 		// public
-		router.Get("/health", app.healthCheckHandler)
+		r.Get("/health", app.healthCheckHandler)
 	})
 
 	return router
