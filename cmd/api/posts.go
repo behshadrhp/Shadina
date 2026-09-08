@@ -1,12 +1,16 @@
 package main
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
+	"github.com/behshadrhp/Shadina/internal/consts"
 	"github.com/behshadrhp/Shadina/internal/dto"
 	"github.com/behshadrhp/Shadina/internal/response"
 	"github.com/behshadrhp/Shadina/internal/storage"
 	"github.com/behshadrhp/Shadina/internal/utils"
+	"github.com/go-chi/chi/v5"
 )
 
 func (app *application) listPostsHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,4 +48,28 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	response.SuccessResponse(w, "post created successfully", 1002, post)
+}
+
+func (app *application) retrievePostHandler(w http.ResponseWriter, r *http.Request) {
+	paramID := chi.URLParam(r, "postID")
+	postID, err := strconv.ParseInt(paramID, 10, 64)
+	if err != nil {
+		response.InternalErrorResponse(w, err.Error(), 5004)
+		return
+	}
+
+	ctx := r.Context()
+
+	post, err := app.storage.Posts.GetByID(ctx, postID)
+	if err != nil {
+		switch {
+		case errors.Is(err, consts.NOT_FOUND):
+			response.NotFoundResponse(w, "post not found", 4001)
+		default:
+			response.InternalErrorResponse(w, err.Error(), 5005)
+		}
+		return
+	}
+
+	response.SuccessResponse(w, "Post retrieved successfully", 1003, post)
 }

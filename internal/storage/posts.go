@@ -3,9 +3,12 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/lib/pq"
+
+	"github.com/behshadrhp/Shadina/internal/consts"
 )
 
 type PostsStorage struct {
@@ -89,4 +92,42 @@ func (ps *PostsStorage) List(ctx context.Context) ([]*Post, error) {
 	}
 
 	return posts, nil
+}
+
+func (ps *PostsStorage) GetByID(ctx context.Context, id int64) (*Post, error) {
+	query := `
+		SELECT 
+			id, 
+			user_id, 
+			title, 
+			content, 
+			tags, 
+			created_at, 
+			updated_at
+		FROM posts
+		WHERE id=$1
+	`
+
+	var post Post
+
+	err := ps.db.QueryRowContext(ctx, query, id).Scan(
+		&post.ID,
+		&post.UserID,
+		&post.Title,
+		&post.Content,
+		pq.Array(&post.Tags),
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, consts.NOT_FOUND
+		default:
+			return nil, err
+		}
+	}
+
+	return &post, nil
 }

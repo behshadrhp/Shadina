@@ -24,6 +24,11 @@ func (app *application) mount() http.Handler {
 			// crud routes
 			r.Get("/", app.listPostsHandler)
 			r.Post("/", app.createPostHandler)
+
+			// retrieve
+			r.Route("/{postID}", func(r chi.Router) {
+				r.Get("/", app.retrievePostHandler)
+			})
 		})
 
 		// public routes
