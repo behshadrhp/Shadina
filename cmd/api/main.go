@@ -20,7 +20,9 @@ func init() {
 
 func main() {
 	cfg := config{
-		addr: env.GetString("SERVER_ADDR", ":8000"),
+		addr:        env.GetString("SERVER_ADDR", ":8000"),
+		version:     env.GetString("APP_VERSION", "0.0.1"),
+		environment: env.GetString("APP_ENVIRONMENT", "development"),
 		db: dbConfig{
 			addr:           env.GetString("DATABASE_ADDR", "postgres://postgres:postgres@127.0.0.1:5435/shadina?sslmode=disable"),
 			maxOpenConns:   env.GetInt("MAX_OPEN_CONNS", 30),
