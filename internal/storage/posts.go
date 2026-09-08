@@ -47,3 +47,46 @@ func (ps *PostsStorage) Create(ctx context.Context, post *Post) error {
 
 	return nil
 }
+
+func (ps *PostsStorage) List(ctx context.Context) ([]*Post, error) {
+	query := `
+		SELECT 
+			id, 
+			user_id, 
+			title, 
+			content, 
+			tags, 
+			created_at, 
+			updated_at
+		FROM posts
+	`
+
+	row, err := ps.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	var posts []*Post
+
+	for row.Next() {
+		var post Post
+
+		err := row.Scan(
+			&post.ID,
+			&post.UserID,
+			&post.Title,
+			&post.Content,
+			pq.Array(&post.Tags),
+			&post.CreatedAt,
+			&post.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, &post)
+	}
+
+	return posts, nil
+}

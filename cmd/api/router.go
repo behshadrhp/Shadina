@@ -19,6 +19,13 @@ func (app *application) mount() http.Handler {
 	// handlers
 	router.Route("/v1", func(r chi.Router) {
 
+		r.Route("/posts", func(r chi.Router) {
+
+			// crud routes
+			r.Get("/", app.listPostsHandler)
+			r.Post("/", app.createPostHandler)
+		})
+
 		// public routes
 		r.Get("/health", app.healthCheckHandler)
 	})

@@ -8,6 +8,7 @@ import (
 type Storage struct {
 	Posts interface {
 		Create(ctx context.Context, post *Post) error
+		List(ctx context.Context) ([]*Post, error)
 	}
 	Users interface {
 		Create(ctx context.Context, user *User) error
