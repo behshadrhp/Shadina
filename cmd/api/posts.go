@@ -33,6 +33,11 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	if err := utils.Validate.Struct(payload); err != nil {
+		response.InternalErrorResponse(w, err.Error(), 5006)
+		return
+	}
+
 	post := storage.Post{
 		UserID:  1,
 		Title:   payload.Title,

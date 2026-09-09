@@ -6,11 +6,15 @@ import (
 	"github.com/behshadrhp/Shadina/internal/db"
 	"github.com/behshadrhp/Shadina/internal/env"
 	"github.com/behshadrhp/Shadina/internal/storage"
+	"github.com/behshadrhp/Shadina/internal/utils"
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
 func init() {
 	log.SetPrefix("Shadina: ")
+
+	utils.Validate = validator.New(validator.WithRequiredStructEnabled())
 
 	err := godotenv.Load()
 	if err != nil {
