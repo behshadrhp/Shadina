@@ -102,3 +102,57 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 
 	response.SuccessResponse(w, "post deleted successfully", 1004, nil)
 }
+
+func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
+	paramID := chi.URLParam(r, "postID")
+	postID, err := strconv.ParseInt(paramID, 10, 64)
+	if err != nil {
+		response.InternalErrorResponse(w, err.Error(), 5007)
+		return
+	}
+
+	ctx := r.Context()
+
+	post, err := app.storage.Posts.GetByID(ctx, postID)
+	if err != nil {
+		switch {
+		case errors.Is(err, consts.NOT_FOUND):
+			response.NotFoundResponse(w, "not found", 4002)
+			return
+		default:
+			response.InternalErrorResponse(w, err.Error(), 5008)
+			return
+		}
+	}
+
+	var payload dto.UpdatePostPayload
+	if err := utils.ReadJson(w, r, &payload); err != nil {
+		response.BadRequestResponse(w, "request invalid", 4003)
+		return
+	}
+
+	if err := utils.Validate.StructPartial(payload); err != nil {
+		response.BadRequestResponse(w, "request invalid", 4004)
+		return
+	}
+
+	if payload.Title != nil {
+		post.Title = *payload.Title
+	}
+
+	if payload.Content != nil {
+		post.Content = *payload.Content
+	}
+
+	if err := app.storage.Posts.Update(ctx, post); err != nil {
+		switch {
+		case errors.Is(err, consts.NOT_FOUND):
+			response.NotFoundResponse(w, "post not found", 4001)
+		default:
+			response.InternalErrorResponse(w, err.Error(), 5008)
+		}
+		return
+	}
+
+	response.SuccessResponse(w, "post updated successfully", 1004, nil)
+}
