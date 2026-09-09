@@ -76,5 +76,29 @@ func (app *application) retrievePostHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	response.SuccessResponse(w, "Post retrieved successfully", 1003, post)
+	response.SuccessResponse(w, "post retrieved successfully", 1003, post)
+}
+
+func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
+	paramID := chi.URLParam(r, "postID")
+	postID, err := strconv.ParseInt(paramID, 10, 64)
+	if err != nil {
+		response.InternalErrorResponse(w, err.Error(), 5007)
+		return
+	}
+
+	ctx := r.Context()
+
+	err = app.storage.Posts.Delete(ctx, postID)
+	if err != nil {
+		switch {
+		case errors.Is(err, consts.NOT_FOUND):
+			response.NotFoundResponse(w, "post not found", 4001)
+		default:
+			response.InternalErrorResponse(w, err.Error(), 5008)
+		}
+		return
+	}
+
+	response.SuccessResponse(w, "post deleted successfully", 1004, nil)
 }

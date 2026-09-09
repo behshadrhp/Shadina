@@ -131,3 +131,26 @@ func (ps *PostsStorage) GetByID(ctx context.Context, id int64) (*Post, error) {
 
 	return &post, nil
 }
+
+func (ps *PostsStorage) Delete(ctx context.Context, id int64) error {
+	query := `
+		DELETE FROM posts
+		WHERE id=$1
+	`
+
+	res, err := ps.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return consts.NOT_FOUND
+	}
+
+	return nil
+}
