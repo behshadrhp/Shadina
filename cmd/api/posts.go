@@ -22,6 +22,17 @@ func (app *application) listPostsHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	for i := range posts {
+
+		comments, err := app.storage.Comments.GetByPostID(ctx, posts[i].ID)
+		if err != nil {
+			response.InternalErrorResponse(w, err.Error(), 5009)
+			return
+		}
+
+		posts[i].Comments = comments
+	}
+
 	response.SuccessResponse(w, "posts retrieved successfully", 1001, posts)
 }
 
@@ -75,6 +86,14 @@ func (app *application) retrievePostHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
+
+	comments, err := app.storage.Comments.GetByPostID(ctx, post.ID)
+	if err != nil {
+		response.InternalErrorResponse(w, err.Error(), 5009)
+		return
+	}
+
+	post.Comments = comments
 
 	response.SuccessResponse(w, "post retrieved successfully", 1003, post)
 }

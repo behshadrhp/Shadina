@@ -22,7 +22,7 @@ type User struct {
 func (us *UsersStorage) Create(ctx context.Context, user *User) error {
 	query := `
 		INSERT INTO users(username, email, password)
-		VALUE ($1, $2, $3)
+		VALUES ($1, $2, $3)
 		RETURNING id, created_at, updated_at
 	`
 
