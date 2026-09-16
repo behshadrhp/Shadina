@@ -3,7 +3,10 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
+
+	"github.com/behshadrhp/Shadina/internal/consts"
 )
 
 type UsersStorage struct {
@@ -85,4 +88,40 @@ func (us *UsersStorage) List(ctx context.Context) ([]*User, error) {
 	}
 
 	return users, nil
+}
+
+func (us *UsersStorage) GetByID(ctx context.Context, id int64) (*User, error) {
+	query := `
+		SELECT 
+			id,
+			username,
+			email,
+			password,
+			created_at,
+			updated_at
+		FROM users
+		WHERE id = $1
+	`
+
+	var user User
+
+	err := us.db.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, consts.NOT_FOUND
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, err
 }

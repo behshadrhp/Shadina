@@ -24,6 +24,9 @@ func (app *application) mount() http.Handler {
 			r.Get("/", app.listUsersHandler)
 
 			// retrieve
+			r.Route("/{userID}", func(r chi.Router) {
+				r.Get("/", app.retrieveUsersHandler)
+			})
 		})
 
 		r.Route("/posts", func(r chi.Router) {
