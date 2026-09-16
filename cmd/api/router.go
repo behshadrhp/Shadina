@@ -19,6 +19,13 @@ func (app *application) mount() http.Handler {
 	// handlers
 	router.Route("/v1", func(r chi.Router) {
 
+		r.Route("/users", func(r chi.Router) {
+			// crud routes
+			r.Get("/", app.listUsersHandler)
+
+			// retrieve
+		})
+
 		r.Route("/posts", func(r chi.Router) {
 
 			// crud routes

@@ -15,6 +15,7 @@ type Storage struct {
 	}
 	Users interface {
 		Create(ctx context.Context, user *User) error
+		List(ctx context.Context) ([]*User, error)
 	}
 	Comments interface {
 		Create(ctx context.Context, comment *Comment) error
