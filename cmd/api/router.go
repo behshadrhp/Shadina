@@ -26,6 +26,10 @@ func (app *application) mount() http.Handler {
 			// retrieve
 			r.Route("/{userID}", func(r chi.Router) {
 				r.Get("/", app.retrieveUsersHandler)
+
+				// followers
+				r.Put("/follow", app.UserFollowHandler)
+				r.Put("/unfollow", app.UserUnfollowHandler)
 			})
 		})
 
