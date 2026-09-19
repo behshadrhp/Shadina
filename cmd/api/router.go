@@ -30,6 +30,9 @@ func (app *application) mount() http.Handler {
 				// followers
 				r.Put("/follow", app.UserFollowHandler)
 				r.Put("/unfollow", app.UserUnfollowHandler)
+
+				// feeds
+				r.Get("/feeds", app.listFeedsHandler)
 			})
 		})
 

@@ -16,14 +16,25 @@ type PostsStorage struct {
 }
 
 type Post struct {
-	ID        int64     `json:"id"`
-	UserID    int64     `json:"user_id"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	Tags      []string  `json:"tags"`
-	Comments  []Comment `json:"comments"`
+	// initial fields
+	ID      int64    `json:"id"`
+	UserID  int64    `json:"user_id"`
+	Title   string   `json:"title"`
+	Content string   `json:"content"`
+	Tags    []string `json:"tags"`
+
+	// timestamp
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+
+	// relations
+	User     User      `json:"user"`
+	Comments []Comment `json:"comments"`
+}
+
+type PostWithMetadata struct {
+	Post
+	CommentsCount int64 `json:"comment_count"`
 }
 
 func (ps *PostsStorage) Create(ctx context.Context, post *Post) error {
@@ -169,4 +180,60 @@ func (ps *PostsStorage) Update(ctx context.Context, post *Post) error {
 	}
 
 	return nil
+}
+
+func (ps *PostsStorage) GetFeed(ctx context.Context, userID int64) ([]PostWithMetadata, error) {
+	query := `
+		SELECT
+			p.id,
+			p.user_id,
+			p.title,
+			p.content,
+			p.created_at,
+			p.updated_at,
+			p.tags,
+			u.username,
+			COUNT(c.id) AS comments_count
+		FROM posts p
+		LEFT JOIN comments c ON c.post_id = p.id
+		LEFT JOIN users u ON p.user_id = u.id
+		JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
+		WHERE f.user_id = $1 OR p.user_id = $1
+		GROUP BY p.id, u.username
+		ORDER BY p.created_at DESC
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, consts.CTX_TIMEOUT)
+	defer cancel()
+
+	rows, err := ps.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var feed []PostWithMetadata
+
+	for rows.Next() {
+		var p PostWithMetadata
+		err := rows.Scan(
+			&p.ID,
+			&p.UserID,
+			&p.Title,
+			&p.Content,
+			&p.CreatedAt,
+			&p.UpdatedAt,
+			pq.Array(&p.Tags),
+			&p.User.Username,
+			&p.CommentsCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		feed = append(feed, p)
+	}
+
+	return feed, nil
 }
