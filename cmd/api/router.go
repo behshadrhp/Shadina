@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 func (app *application) mount() http.Handler {
@@ -18,6 +20,10 @@ func (app *application) mount() http.Handler {
 
 	// handlers
 	router.Route("/v1", func(r chi.Router) {
+
+		// docs
+		docsPath := fmt.Sprintf("%v/swagger/doc.json", app.config.url)
+		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsPath)))
 
 		r.Route("/users", func(r chi.Router) {
 			// crud routes

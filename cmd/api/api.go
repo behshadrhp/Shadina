@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/behshadrhp/Shadina/docs"
 	"github.com/behshadrhp/Shadina/internal/consts"
 	"github.com/behshadrhp/Shadina/internal/storage"
 )
@@ -15,6 +16,7 @@ type application struct {
 
 type config struct {
 	addr        string
+	url         string
 	version     string
 	environment string
 	db          dbConfig
@@ -28,6 +30,11 @@ type dbConfig struct {
 }
 
 func (app *application) run(mux *http.Handler) error {
+
+	docs.SwaggerInfo.Version = app.config.version
+	docs.SwaggerInfo.Host = app.config.url
+	docs.SwaggerInfo.BasePath = "/v1/"
+
 	srv := &http.Server{
 		Addr:         app.config.addr,
 		Handler:      *mux,

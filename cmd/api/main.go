@@ -22,9 +22,26 @@ func init() {
 	}
 }
 
+//	@title			Shadina API
+//	@description	API for Shadina, a social network
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @BasePath					/v1
+//
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in							header
+// @name						Authorization
 func main() {
 	cfg := config{
 		addr:        env.GetString("SERVER_ADDR", ":8000"),
+		url:         env.GetString("SERVER_URL", "127.0.0.1:8000"),
 		version:     env.GetString("APP_VERSION", "0.0.1"),
 		environment: env.GetString("APP_ENVIRONMENT", "development"),
 		db: dbConfig{
