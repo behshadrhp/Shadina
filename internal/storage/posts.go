@@ -182,7 +182,7 @@ func (ps *PostsStorage) Update(ctx context.Context, post *Post) error {
 	return nil
 }
 
-func (ps *PostsStorage) GetFeed(ctx context.Context, userID int64) ([]PostWithMetadata, error) {
+func (ps *PostsStorage) GetFeed(ctx context.Context, userID int64, pagination PaginatedQuery) ([]PostWithMetadata, error) {
 	query := `
 		SELECT
 			p.id,
@@ -195,18 +195,31 @@ func (ps *PostsStorage) GetFeed(ctx context.Context, userID int64) ([]PostWithMe
 			u.username,
 			COUNT(c.id) AS comments_count
 		FROM posts p
-		LEFT JOIN comments c ON c.post_id = p.id
-		LEFT JOIN users u ON p.user_id = u.id
-		JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
-		WHERE f.user_id = $1 OR p.user_id = $1
+		LEFT JOIN comments c 
+			ON c.post_id = p.id
+		LEFT JOIN users u 
+			ON p.user_id = u.id
+		JOIN followers f 
+			ON f.follower_id = p.user_id OR p.user_id = $1
+		WHERE
+			(
+				f.user_id = $1
+				OR p.user_id = $1
+			)
+			AND (
+				$5 = ''
+				OR p.title ILIKE '%' || $5 || '%'
+				OR p.content ILIKE '%' || $5 || '%'
+			)
 		GROUP BY p.id, u.username
-		ORDER BY p.created_at DESC
+		ORDER BY p.created_at, $2
+		LIMIT $3 OFFSET $4
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, consts.CTX_TIMEOUT)
 	defer cancel()
 
-	rows, err := ps.db.QueryContext(ctx, query, userID)
+	rows, err := ps.db.QueryContext(ctx, query, userID, pagination.Sort, pagination.Limit, pagination.Offset, pagination.Search)
 	if err != nil {
 		return nil, err
 	}
