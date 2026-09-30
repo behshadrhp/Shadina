@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"os"
 
 	"github.com/behshadrhp/Shadina/internal/db"
 	"github.com/behshadrhp/Shadina/internal/env"
@@ -9,17 +9,11 @@ import (
 	"github.com/behshadrhp/Shadina/internal/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 func init() {
-	log.SetPrefix("Shadina: ")
-
 	utils.Validate = validator.New(validator.WithRequiredStructEnabled())
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalln("error loading .env file")
-	}
 }
 
 //	@title			Shadina API
@@ -39,6 +33,29 @@ func init() {
 // @in							header
 // @name						Authorization
 func main() {
+	// logger
+
+	if err := os.MkdirAll("logs", 0755); err != nil {
+		panic(err)
+	}
+
+	zapCfg := zap.NewProductionConfig()
+
+	zapCfg.OutputPaths = []string{
+		"logs/app.log",
+	}
+	zapCfg.ErrorOutputPaths = []string{
+		"logs/error.log",
+	}
+
+	log := zap.Must(zapCfg.Build()).Sugar()
+	defer log.Sync()
+
+	// load environment
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalln("error loading .env file")
+	}
 	cfg := config{
 		addr:        env.GetString("SERVER_ADDR", ":8000"),
 		url:         env.GetString("SERVER_URL", "127.0.0.1:8000"),
@@ -64,13 +81,14 @@ func main() {
 		log.Fatalln(dbDriver, err)
 	}
 	defer db.Close()
-	log.Printf("database(%v) connected pool stablish", dbDriver)
+	log.Infow("database stable publish", "driver", dbDriver)
 
 	stg := storage.NewPostgresql(db)
 
 	app := &application{
 		config:  cfg,
 		storage: stg,
+		logger:  log,
 	}
 
 	mux := app.mount()

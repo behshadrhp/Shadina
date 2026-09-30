@@ -12,11 +12,14 @@ import (
 func (app *application) mount() http.Handler {
 	router := chi.NewRouter()
 
-	// middleware
+	// core middleware
 	router.Use(middleware.Heartbeat("/ping"))
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
+
+	// internal middleware
+	router.Use(app.LoggerMiddleware)
 
 	// handlers
 	router.Route("/v1", func(r chi.Router) {

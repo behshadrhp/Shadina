@@ -1,17 +1,18 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/behshadrhp/Shadina/docs"
 	"github.com/behshadrhp/Shadina/internal/consts"
 	"github.com/behshadrhp/Shadina/internal/storage"
+	"go.uber.org/zap"
 )
 
 type application struct {
 	config  config
 	storage storage.Storage
+	logger  *zap.SugaredLogger
 }
 
 type config struct {
@@ -43,7 +44,7 @@ func (app *application) run(mux *http.Handler) error {
 		IdleTimeout:  consts.IDLE_TIMEOUT,
 	}
 
-	log.Printf("run server at http://127.0.0.1%v", app.config.addr)
+	app.logger.Infow("server stable", "address", app.config.url, "environment", app.config.environment)
 
 	return srv.ListenAndServe()
 }

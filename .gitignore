@@ -36,3 +36,6 @@ vendor/
 
 # Temporary
 tmp
+
+# logs
+*.log
