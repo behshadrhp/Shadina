@@ -10,6 +10,21 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// listFeedsHandler godoc
+//
+//	@Summary		User Feed
+//	@Description	Retrieve a paginated feed for a user based on followed users and feed rules.
+//	@Tags			Feeds
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path		int					true	"User ID"
+//	@Param			page	query		int					false	"Page number"		default(1)
+//	@Param			limit	query		int					false	"Items per page"	default(20)
+//	@Param			sort	query		string				false	"Sort order"		Enums(asc,desc)	default(desc)
+//	@Success		200		{object}	response.Response	"Feed retrieved successfully"
+//	@Failure		400		{object}	response.Response	"Invalid request"
+//	@Failure		500		{object}	response.Response	"Internal server error"
+//	@Router			/users/{userID}/feed [get]
 func (app *application) listFeedsHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {

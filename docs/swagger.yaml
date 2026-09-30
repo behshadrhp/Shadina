@@ -1,4 +1,70 @@
 basePath: /v1
+definitions:
+  dto.CreatePostPayload:
+    properties:
+      content:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        maxLength: 255
+        type: string
+    required:
+    - content
+    - title
+    type: object
+  dto.FollowPayload:
+    properties:
+      follower_id:
+        type: integer
+    type: object
+  dto.HealthStatusPayload:
+    properties:
+      environment:
+        type: string
+      status:
+        type: string
+      version:
+        type: string
+    type: object
+  dto.UnFollowPayload:
+    properties:
+      follower_id:
+        type: integer
+    type: object
+  dto.UpdatePostPayload:
+    properties:
+      content:
+        type: string
+      title:
+        maxLength: 255
+        type: string
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      internal_code:
+        type: integer
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  storage.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -10,7 +76,355 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: Shadina API
-paths: {}
+paths:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Check API status, version and environment information.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API is healthy
+          schema:
+            $ref: '#/definitions/dto.HealthStatusPayload'
+      summary: Health Check
+      tags:
+      - System
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all posts with their associated comments.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Posts retrieved successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: List Posts
+      tags:
+      - Posts
+    post:
+      consumes:
+      - application/json
+      description: Create a new post.
+      parameters:
+      - description: Create Post Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePostPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Post created successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Create Post
+      tags:
+      - Posts
+  /posts/{postID}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post by its ID.
+      parameters:
+      - description: Post ID
+        in: path
+        name: postID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post deleted successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Post not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Delete Post
+      tags:
+      - Posts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single post by its ID including comments.
+      parameters:
+      - description: Post ID
+        in: path
+        name: postID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post retrieved successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Post not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Retrieve Post
+      tags:
+      - Posts
+    patch:
+      consumes:
+      - application/json
+      description: Partially update an existing post.
+      parameters:
+      - description: Post ID
+        in: path
+        name: postID
+        required: true
+        type: integer
+      - description: Update Post Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePostPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post updated successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Post not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Update Post
+      tags:
+      - Posts
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all users from the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/storage.User'
+                  type: array
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: List Users
+      tags:
+      - Users
+  /users/{userID}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a user by their unique identifier.
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/storage.User'
+              type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Retrieve User
+      tags:
+      - Users
+  /users/{userID}/feed:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a paginated feed for a user based on followed users and
+        feed rules.
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - default: desc
+        description: Sort order
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Feed retrieved successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: User Feed
+      tags:
+      - Feeds
+  /users/{userID}/follow:
+    post:
+      consumes:
+      - application/json
+      description: Create a follower relationship between two users.
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      - description: Follow Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.FollowPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User followed successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Follow User
+      tags:
+      - Followers
+  /users/{userID}/unfollow:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a follower relationship between two users.
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      - description: Unfollow Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UnFollowPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User unfollowed successfully
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Unfollow User
+      tags:
+      - Followers
 securityDefinitions:
   ApiKeyAuth:
     in: header

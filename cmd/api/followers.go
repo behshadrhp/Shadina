@@ -12,6 +12,20 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// UserFollowHandler godoc
+//
+//	@Summary		Follow User
+//	@Description	Create a follower relationship between two users.
+//	@Tags			Followers
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path		int					true	"User ID"
+//	@Param			request	body		dto.FollowPayload	true	"Follow Payload"
+//	@Success		200		{object}	response.Response	"User followed successfully"
+//	@Failure		400		{object}	response.Response	"Invalid request"
+//	@Failure		404		{object}	response.Response	"User not found"
+//	@Failure		500		{object}	response.Response	"Internal server error"
+//	@Router			/users/{userID}/follow [post]
 func (app *application) UserFollowHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {
@@ -42,6 +56,20 @@ func (app *application) UserFollowHandler(w http.ResponseWriter, r *http.Request
 	response.SuccessResponse(w, "user followed successfully", 1007, nil)
 }
 
+// UserUnfollowHandler godoc
+//
+//	@Summary		Unfollow User
+//	@Description	Remove a follower relationship between two users.
+//	@Tags			Followers
+//	@Accept			json
+//	@Produce		json
+//	@Param			userID	path		int					true	"User ID"
+//	@Param			request	body		dto.UnFollowPayload	true	"Unfollow Payload"
+//	@Success		200		{object}	response.Response	"User unfollowed successfully"
+//	@Failure		400		{object}	response.Response	"Invalid request"
+//	@Failure		404		{object}	response.Response	"User not found"
+//	@Failure		500		{object}	response.Response	"Internal server error"
+//	@Router			/users/{userID}/unfollow [delete]
 func (app *application) UserUnfollowHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {

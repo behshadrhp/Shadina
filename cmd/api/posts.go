@@ -13,6 +13,16 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// listPostsHandler godoc
+//
+//	@Summary		List Posts
+//	@Description	Retrieve all posts with their associated comments.
+//	@Tags			Posts
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	response.Response	"Posts retrieved successfully"
+//	@Failure		500	{object}	response.Response	"Internal server error"
+//	@Router			/posts [get]
 func (app *application) listPostsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -36,6 +46,18 @@ func (app *application) listPostsHandler(w http.ResponseWriter, r *http.Request)
 	response.SuccessResponse(w, "posts retrieved successfully", 1001, posts)
 }
 
+// createPostHandler godoc
+//
+//	@Summary		Create Post
+//	@Description	Create a new post.
+//	@Tags			Posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.CreatePostPayload	true	"Create Post Payload"
+//	@Success		201		{object}	response.Response		"Post created successfully"
+//	@Failure		400		{object}	response.Response		"Validation error"
+//	@Failure		500		{object}	response.Response		"Internal server error"
+//	@Router			/posts [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload dto.CreatePostPayload
 
@@ -66,6 +88,18 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	response.SuccessResponse(w, "post created successfully", 1002, post)
 }
 
+// retrievePostHandler godoc
+//
+//	@Summary		Retrieve Post
+//	@Description	Retrieve a single post by its ID including comments.
+//	@Tags			Posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int					true	"Post ID"
+//	@Success		200		{object}	response.Response	"Post retrieved successfully"
+//	@Failure		404		{object}	response.Response	"Post not found"
+//	@Failure		500		{object}	response.Response	"Internal server error"
+//	@Router			/posts/{postID} [get]
 func (app *application) retrievePostHandler(w http.ResponseWriter, r *http.Request) {
 	paramID := chi.URLParam(r, "postID")
 	postID, err := strconv.ParseInt(paramID, 10, 64)
@@ -98,6 +132,18 @@ func (app *application) retrievePostHandler(w http.ResponseWriter, r *http.Reque
 	response.SuccessResponse(w, "post retrieved successfully", 1003, post)
 }
 
+// deletePostHandler godoc
+//
+//	@Summary		Delete Post
+//	@Description	Delete a post by its ID.
+//	@Tags			Posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int					true	"Post ID"
+//	@Success		200		{object}	response.Response	"Post deleted successfully"
+//	@Failure		404		{object}	response.Response	"Post not found"
+//	@Failure		500		{object}	response.Response	"Internal server error"
+//	@Router			/posts/{postID} [delete]
 func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request) {
 	paramID := chi.URLParam(r, "postID")
 	postID, err := strconv.ParseInt(paramID, 10, 64)
@@ -122,6 +168,20 @@ func (app *application) deletePostHandler(w http.ResponseWriter, r *http.Request
 	response.SuccessResponse(w, "post deleted successfully", 1004, nil)
 }
 
+// updatePostHandler godoc
+//
+//	@Summary		Update Post
+//	@Description	Partially update an existing post.
+//	@Tags			Posts
+//	@Accept			json
+//	@Produce		json
+//	@Param			postID	path		int						true	"Post ID"
+//	@Param			request	body		dto.UpdatePostPayload	true	"Update Post Payload"
+//	@Success		200		{object}	response.Response		"Post updated successfully"
+//	@Failure		400		{object}	response.Response		"Invalid request"
+//	@Failure		404		{object}	response.Response		"Post not found"
+//	@Failure		500		{object}	response.Response		"Internal server error"
+//	@Router			/posts/{postID} [patch]
 func (app *application) updatePostHandler(w http.ResponseWriter, r *http.Request) {
 	paramID := chi.URLParam(r, "postID")
 	postID, err := strconv.ParseInt(paramID, 10, 64)
