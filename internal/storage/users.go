@@ -6,6 +6,8 @@ import (
 	"errors"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/behshadrhp/Shadina/internal/consts"
 )
 
@@ -20,6 +22,17 @@ type User struct {
 	Password  string    `json:"-"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (u *User) HashedPassword(text string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	u.Password = string(hash)
+
+	return nil
 }
 
 func (us *UsersStorage) Create(ctx context.Context, user *User) error {

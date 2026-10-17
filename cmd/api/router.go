@@ -28,6 +28,12 @@ func (app *application) mount() http.Handler {
 		docsPath := fmt.Sprintf("%v/swagger/doc.json", app.config.url)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsPath)))
 
+		// authentication
+		r.Route("/auth", func(r chi.Router) {
+			// user register
+			r.Post("/register", app.userRegistrationHandler)
+		})
+
 		r.Route("/users", func(r chi.Router) {
 			// crud routes
 			r.Get("/", app.listUsersHandler)
