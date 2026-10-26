@@ -37,6 +37,10 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
+
+			// middleware
+			r.Use(app.JWTAuthMiddleware)
+
 			// crud routes
 			r.Get("/", app.listUsersHandler)
 
@@ -54,6 +58,9 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/posts", func(r chi.Router) {
+
+			// middleware
+			r.Use(app.JWTAuthMiddleware)
 
 			// crud routes
 			r.Get("/", app.listPostsHandler)

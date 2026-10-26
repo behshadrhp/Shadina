@@ -1,6 +1,10 @@
 package auth
 
-import "github.com/golang-jwt/jwt/v5"
+import (
+	"fmt"
+
+	"github.com/golang-jwt/jwt/v5"
+)
 
 type JWTAuthenticator struct {
 	secretKey string
@@ -28,5 +32,16 @@ func (ja JWTAuthenticator) GenerateToken(claims jwt.Claims) (string, error) {
 }
 
 func (ja JWTAuthenticator) ValidateToken(token string) (*jwt.Token, error) {
-	return nil, nil
+	return jwt.Parse(token, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected sining method %v", t.Header["alg"])
+		}
+
+		return []byte(ja.secretKey), nil
+	},
+		jwt.WithIssuer(ja.iss),
+		jwt.WithAudience(ja.aud),
+		jwt.WithExpirationRequired(),
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
+	)
 }

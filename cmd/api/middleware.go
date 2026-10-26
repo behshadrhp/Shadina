@@ -1,10 +1,17 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/behshadrhp/Shadina/internal/consts"
+	"github.com/behshadrhp/Shadina/internal/response"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func (app *application) LoggerMiddleware(next http.Handler) http.Handler {
@@ -25,5 +32,49 @@ func (app *application) LoggerMiddleware(next http.Handler) http.Handler {
 			"bytes", ww.BytesWritten(),
 			"duration", time.Since(start),
 		)
+	})
+}
+
+func (app *application) JWTAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+
+		if authHeader == "" {
+			response.UnauthorizedResponse(w, "authorization header is missing", 4019)
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			response.UnauthorizedResponse(w, "authorization header is malformed", 4020)
+			return
+		}
+
+		token := parts[1]
+		jwtToken, err := app.authenticator.ValidateToken(token)
+		if err != nil {
+			response.InternalErrorResponse(w, err.Error(), 5019)
+			return
+		}
+
+		claims, _ := jwtToken.Claims.(jwt.MapClaims)
+
+		userID, err := strconv.ParseInt(fmt.Sprintf("%.f", claims["sub"]), 10, 64)
+		if err != nil {
+			response.UnauthorizedResponse(w, err.Error(), 4021)
+			return
+		}
+
+		ctx := r.Context()
+
+		user, err := app.storage.Users.GetByID(ctx, userID)
+		if err != nil {
+			response.UnauthorizedResponse(w, err.Error(), 4022)
+			return
+		}
+
+		ctx = context.WithValue(ctx, consts.USER_CTX, user)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
