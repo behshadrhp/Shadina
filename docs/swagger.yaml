@@ -20,6 +20,19 @@ definitions:
       follower_id:
         type: integer
     type: object
+  dto.GenerateTokenPayload:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 255
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
   dto.HealthStatusPayload:
     properties:
       environment:
@@ -77,6 +90,37 @@ info:
   termsOfService: http://swagger.io/terms/
   title: Shadina API
 paths:
+  /auth/token:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user using email and password and returns a signed
+        JWT access token.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GenerateTokenPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token generated successfully
+          schema:
+            type: object
+        "400":
+          description: Invalid request or credentials
+          schema:
+            type: object
+        "500":
+          description: Token generation failed
+          schema:
+            type: object
+      summary: Generate an access token
+      tags:
+      - Authentication
   /health:
     get:
       consumes:

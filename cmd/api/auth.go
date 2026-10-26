@@ -48,6 +48,18 @@ func (app *application) userRegistrationHandler(w http.ResponseWriter, r *http.R
 	response.SuccessResponse(w, "user registered successfully", 1010, user)
 }
 
+// generateTokenHandler godoc
+//
+//	@Summary		Generate an access token
+//	@Description	Authenticates a user using email and password and returns a signed JWT access token.
+//	@Tags			Authentication
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		dto.GenerateTokenPayload	true	"Login credentials"
+//	@Success		200		{object}	object						"Token generated successfully"
+//	@Failure		400		{object}	object						"Invalid request or credentials"
+//	@Failure		500		{object}	object						"Token generation failed"
+//	@Router			/auth/token [post]
 func (app *application) generateTokenHandler(w http.ResponseWriter, r *http.Request) {
 	var payload dto.GenerateTokenPayload
 
