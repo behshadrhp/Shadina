@@ -35,6 +35,16 @@ func (u *User) HashedPassword(text string) error {
 	return nil
 }
 
+func (u *User) ComparePassword(text string) bool {
+
+	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(text))
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 func (us *UsersStorage) Create(ctx context.Context, user *User) error {
 	query := `
 		INSERT INTO users(username, email, password)
@@ -119,6 +129,42 @@ func (us *UsersStorage) GetByID(ctx context.Context, id int64) (*User, error) {
 	var user User
 
 	err := us.db.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Password,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, consts.NOT_FOUND
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, err
+}
+
+func (us *UsersStorage) GetByEmail(ctx context.Context, email string) (*User, error) {
+	query := `
+		SELECT 
+			id,
+			username,
+			email,
+			password,
+			created_at,
+			updated_at
+		FROM users
+		WHERE email = $1
+	`
+
+	var user User
+
+	err := us.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,

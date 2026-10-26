@@ -2,11 +2,14 @@ package main
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/behshadrhp/Shadina/internal/consts"
 	"github.com/behshadrhp/Shadina/internal/dto"
 	"github.com/behshadrhp/Shadina/internal/response"
 	"github.com/behshadrhp/Shadina/internal/storage"
 	"github.com/behshadrhp/Shadina/internal/utils"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func (app *application) userRegistrationHandler(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +23,7 @@ func (app *application) userRegistrationHandler(w http.ResponseWriter, r *http.R
 	}
 
 	if err := utils.Validate.Struct(&payload); err != nil {
-		response.BadRequestResponse(w, "invalid request", 4012)
+		response.BadRequestResponse(w, err.Error(), 4012)
 		return
 	}
 
@@ -43,4 +46,57 @@ func (app *application) userRegistrationHandler(w http.ResponseWriter, r *http.R
 	}
 
 	response.SuccessResponse(w, "user registered successfully", 1010, user)
+}
+
+func (app *application) generateTokenHandler(w http.ResponseWriter, r *http.Request) {
+	var payload dto.GenerateTokenPayload
+
+	ctx := r.Context()
+
+	if err := utils.ReadJson(w, r, &payload); err != nil {
+		response.BadRequestResponse(w, "invalid request", 4013)
+		return
+	}
+
+	if err := utils.Validate.Struct(&payload); err != nil {
+		response.BadRequestResponse(w, "invalid request", 4014)
+		return
+	}
+
+	// fetch user
+	user, err := app.storage.Users.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		switch err {
+		case consts.NOT_FOUND:
+			response.BadRequestResponse(w, "invalid request", 4015)
+			return
+		default:
+			response.BadRequestResponse(w, "invalid request", 4016)
+			return
+		}
+	}
+
+	// check password
+	if ok := user.ComparePassword(payload.Password); !ok {
+		response.BadRequestResponse(w, "invalid email or password", 4017)
+		return
+	}
+
+	// generate token
+	claims := jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(app.config.auth.token.exp).Unix(),
+		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
+		"iss": app.config.auth.token.iss,
+		"aud": app.config.auth.token.aud,
+	}
+
+	token, err := app.authenticator.GenerateToken(claims)
+	if err != nil {
+		response.BadRequestResponse(w, "invalid request", 4018)
+		return
+	}
+
+	response.SuccessResponse(w, "generate token successfully", 1011, token)
 }

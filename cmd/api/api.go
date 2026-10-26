@@ -2,17 +2,20 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/behshadrhp/Shadina/docs"
+	"github.com/behshadrhp/Shadina/internal/auth"
 	"github.com/behshadrhp/Shadina/internal/consts"
 	"github.com/behshadrhp/Shadina/internal/storage"
 	"go.uber.org/zap"
 )
 
 type application struct {
-	config  config
-	storage storage.Storage
-	logger  *zap.SugaredLogger
+	config        config
+	storage       storage.Storage
+	logger        *zap.SugaredLogger
+	authenticator auth.Authenticator
 }
 
 type config struct {
@@ -21,6 +24,7 @@ type config struct {
 	version     string
 	environment string
 	db          dbConfig
+	auth        authConfig
 }
 
 type dbConfig struct {
@@ -28,6 +32,17 @@ type dbConfig struct {
 	maxOpenConns   int
 	maxIdleConns   int
 	maxIdleTimeout string
+}
+
+type authConfig struct {
+	token tokenConfig
+}
+
+type tokenConfig struct {
+	secretKey string
+	exp       time.Duration
+	iss       string
+	aud       string
 }
 
 func (app *application) run(mux *http.Handler) error {

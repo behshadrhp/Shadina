@@ -2,7 +2,9 @@ package main
 
 import (
 	"os"
+	"time"
 
+	"github.com/behshadrhp/Shadina/internal/auth"
 	"github.com/behshadrhp/Shadina/internal/db"
 	"github.com/behshadrhp/Shadina/internal/env"
 	"github.com/behshadrhp/Shadina/internal/storage"
@@ -67,6 +69,14 @@ func main() {
 			maxIdleConns:   env.GetInt("MAX_IDLE_CONNS", 30),
 			maxIdleTimeout: env.GetString("MAX_IDLE_TIMEOUT", "15m"),
 		},
+		auth: authConfig{
+			token: tokenConfig{
+				secretKey: env.GetString("AUTH_SECRET_KAY", "secretKey"),
+				exp:       time.Hour * 24 * 3,
+				iss:       "Shadina",
+				aud:       "Shadina",
+			},
+		},
 	}
 
 	dbDriver := env.GetString("DATABASE_DRIVER", "postgres")
@@ -85,10 +95,17 @@ func main() {
 
 	stg := storage.NewPostgresql(db)
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+		cfg.auth.token.secretKey,
+		cfg.auth.token.iss,
+		cfg.auth.token.aud,
+	)
+
 	app := &application{
-		config:  cfg,
-		storage: stg,
-		logger:  log,
+		config:        cfg,
+		storage:       stg,
+		logger:        log,
+		authenticator: jwtAuthenticator,
 	}
 
 	mux := app.mount()
