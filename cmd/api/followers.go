@@ -6,9 +6,7 @@ import (
 	"strconv"
 
 	"github.com/behshadrhp/Shadina/internal/consts"
-	"github.com/behshadrhp/Shadina/internal/dto"
 	"github.com/behshadrhp/Shadina/internal/response"
-	"github.com/behshadrhp/Shadina/internal/utils"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -27,22 +25,17 @@ import (
 //	@Failure		500		{object}	response.Response	"Internal server error"
 //	@Router			/users/{userID}/follow [post]
 func (app *application) UserFollowHandler(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
-	if err != nil {
-		response.InternalErrorResponse(w, err.Error(), 5011)
-		return
-	}
+	user := app.GetUserCTX(r)
 
-	var payload dto.FollowPayload
-	if err := utils.ReadJson(w, r, &payload); err != nil {
-		response.BadRequestResponse(w, err.Error(), 4005)
+	followedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
+		response.InternalErrorResponse(w, err.Error(), 5020)
 		return
 	}
 
 	ctx := r.Context()
 
-	err = app.storage.Followers.Follow(ctx, userID, payload.FollowerID)
-	if err != nil {
+	if err := app.storage.Followers.Follow(ctx, user.ID, followedID); err != nil {
 		switch {
 		case errors.Is(err, consts.NOT_FOUND):
 			response.NotFoundResponse(w, "not found", 4006)
@@ -71,22 +64,17 @@ func (app *application) UserFollowHandler(w http.ResponseWriter, r *http.Request
 //	@Failure		500		{object}	response.Response	"Internal server error"
 //	@Router			/users/{userID}/unfollow [delete]
 func (app *application) UserUnfollowHandler(w http.ResponseWriter, r *http.Request) {
-	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
-	if err != nil {
-		response.InternalErrorResponse(w, err.Error(), 5014)
-		return
-	}
+	user := app.GetUserCTX(r)
 
-	var payload dto.UnFollowPayload
-	if err := utils.ReadJson(w, r, &payload); err != nil {
-		response.BadRequestResponse(w, err.Error(), 4007)
+	unfollowedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
+		response.InternalErrorResponse(w, err.Error(), 5021)
 		return
 	}
 
 	ctx := r.Context()
 
-	err = app.storage.Followers.Unfollow(ctx, userID, payload.FollowerID)
-	if err != nil {
+	if err := app.storage.Followers.Unfollow(ctx, user.ID, unfollowedID); err != nil {
 		switch {
 		case errors.Is(err, consts.NOT_FOUND):
 			response.NotFoundResponse(w, "not found", 4008)

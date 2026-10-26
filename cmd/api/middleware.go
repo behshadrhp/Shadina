@@ -10,6 +10,7 @@ import (
 
 	"github.com/behshadrhp/Shadina/internal/consts"
 	"github.com/behshadrhp/Shadina/internal/response"
+	"github.com/behshadrhp/Shadina/internal/storage"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -77,4 +78,10 @@ func (app *application) JWTAuthMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func (app application) GetUserCTX(r *http.Request) *storage.User {
+	user, _ := r.Context().Value("user").(*storage.User)
+
+	return user
 }

@@ -60,6 +60,7 @@ func (app *application) listPostsHandler(w http.ResponseWriter, r *http.Request)
 //	@Router			/posts [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload dto.CreatePostPayload
+	user := app.GetUserCTX(r)
 
 	if err := utils.ReadJson(w, r, &payload); err != nil {
 		response.InternalErrorResponse(w, err.Error(), 5002)
@@ -72,7 +73,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 	}
 
 	post := storage.Post{
-		UserID:  1,
+		UserID:  user.ID,
 		Title:   payload.Title,
 		Content: payload.Content,
 		Tags:    payload.Tags,
