@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"github.com/behshadrhp/Shadina/internal/consts"
 	"github.com/behshadrhp/Shadina/internal/response"
 	"github.com/behshadrhp/Shadina/internal/storage"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -84,4 +86,44 @@ func (app application) GetUserCTX(r *http.Request) *storage.User {
 	user, _ := r.Context().Value("user").(*storage.User)
 
 	return user
+}
+
+func (app *application) UserPostAccessMiddleware(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		user := app.GetUserCTX(r)
+
+		paramID := chi.URLParam(r, "postID")
+		postID, err := strconv.ParseInt(paramID, 10, 64)
+		if err != nil {
+			response.InternalErrorResponse(w, err.Error(), 5004)
+			return
+		}
+
+		ctx := r.Context()
+
+		post, err := app.storage.Posts.GetByID(ctx, postID)
+		if err != nil {
+			switch {
+			case errors.Is(err, consts.NOT_FOUND):
+				response.NotFoundResponse(w, "post not found", 4001)
+			default:
+				response.InternalErrorResponse(w, err.Error(), 5005)
+			}
+			return
+		}
+
+		if user.ID != post.UserID {
+
+			if user.RoleID == 3 {
+				next.ServeHTTP(w, r)
+			}
+
+			response.UnauthorizedResponse(w, "access denied", 4023)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

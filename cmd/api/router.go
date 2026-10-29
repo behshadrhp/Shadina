@@ -68,9 +68,13 @@ func (app *application) mount() http.Handler {
 
 			// retrieve
 			r.Route("/{postID}", func(r chi.Router) {
+
+				// crud routes
 				r.Get("/", app.retrievePostHandler)
-				r.Delete("/", app.deletePostHandler)
-				r.Patch("/", app.updatePostHandler)
+
+				// with middleware
+				r.With(app.UserPostAccessMiddleware).Delete("/", app.deletePostHandler)
+				r.With(app.UserPostAccessMiddleware).Patch("/", app.updatePostHandler)
 			})
 		})
 

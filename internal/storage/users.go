@@ -20,6 +20,7 @@ type User struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
+	RoleID    int       `json:"role_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -47,8 +48,8 @@ func (u *User) ComparePassword(text string) bool {
 
 func (us *UsersStorage) Create(ctx context.Context, user *User) error {
 	query := `
-		INSERT INTO users(username, email, password)
-		VALUES ($1, $2, $3)
+		INSERT INTO users(username, email, password, role_id)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at, updated_at
 	`
 
@@ -58,6 +59,7 @@ func (us *UsersStorage) Create(ctx context.Context, user *User) error {
 		user.Username,
 		user.Email,
 		user.Password,
+		user.RoleID,
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
@@ -120,6 +122,7 @@ func (us *UsersStorage) GetByID(ctx context.Context, id int64) (*User, error) {
 			username,
 			email,
 			password,
+			role_id,
 			created_at,
 			updated_at
 		FROM users
@@ -133,6 +136,7 @@ func (us *UsersStorage) GetByID(ctx context.Context, id int64) (*User, error) {
 		&user.Username,
 		&user.Email,
 		&user.Password,
+		&user.RoleID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -156,6 +160,7 @@ func (us *UsersStorage) GetByEmail(ctx context.Context, email string) (*User, er
 			username,
 			email,
 			password,
+			role_id,
 			created_at,
 			updated_at
 		FROM users
@@ -169,6 +174,7 @@ func (us *UsersStorage) GetByEmail(ctx context.Context, email string) (*User, er
 		&user.Username,
 		&user.Email,
 		&user.Password,
+		&user.RoleID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)

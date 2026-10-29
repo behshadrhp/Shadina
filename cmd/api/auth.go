@@ -31,6 +31,7 @@ func (app *application) userRegistrationHandler(w http.ResponseWriter, r *http.R
 	user := &storage.User{
 		Email:    payload.Email,
 		Username: payload.Username,
+		RoleID:   1,
 	}
 
 	// hashed password
