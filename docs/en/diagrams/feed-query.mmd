@@ -1,0 +1,17 @@
+%% Feed query shape from PostsStorage.GetFeed. Shared source.
+flowchart TD
+    A["GET /v1/users/{userID}/feeds"] --> B["CreatePaginatedQuery(20, 10, desc)"]
+    B --> C["Parse query: limit, offset, sort, search, since, until"]
+    C --> D["Validate.Struct(PaginatedQuery)"]
+    D --> E["PostsStorage.GetFeed"]
+    E --> F["posts p"]
+    E --> G["LEFT JOIN comments c ON c.post_id = p.id"]
+    E --> H["LEFT JOIN users u ON p.user_id = u.id"]
+    E --> I["JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1"]
+    I --> J["WHERE f.user_id = $1 OR p.user_id = $1"]
+    J --> K["AND search on p.title/p.content when $5 is not empty"]
+    K --> L["GROUP BY p.id, u.username"]
+    L --> M["COUNT(c.id) AS comments_count"]
+    M --> N["ORDER BY p.created_at, $2"]
+    N --> O["LIMIT $3 OFFSET $4"]
+    O --> P["[]PostWithMetadata"]

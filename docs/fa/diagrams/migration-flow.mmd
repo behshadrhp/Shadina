@@ -1,0 +1,18 @@
+%% Migration and seed flow. Shared source.
+flowchart TD
+    A["Empty database"] --> B["make migrate-up<br/>migrate -path ./cmd/migrate/migrations up"]
+    B --> C["000001 create users + citext"]
+    C --> D["000002 create posts"]
+    D --> E["000003 add posts.user_id FK"]
+    E --> F["000004 create comments"]
+    F --> G["000005 add comments FKs"]
+    G --> H["000006 create followers + FKs"]
+    H --> I["000007 add pg_trgm and indexes"]
+    I --> J["000008..000010 absent"]
+    J --> K["000011 create roles + insert 3 roles"]
+    K --> L["000012 add users.role_id, backfill, NOT NULL"]
+    L --> M["schema_migrations = 12"]
+    M --> N["Separate seed step<br/>go run ./cmd/seed"]
+    N --> O["100 users / 200 posts / 500 comments"]
+    O --> P["Seed users have empty passwords<br/>and cannot log in"]
+    B -.-> Q["Rollback: migrate down<br/>reverse steps; destructive"]

@@ -1,0 +1,46 @@
+%% Entity relationship diagram from the applied migrations and live schema. Shared source.
+erDiagram
+    ROLES ||--o{ USERS : "role_id (FK)"
+    USERS ||--o{ POSTS : "user_id (FK)"
+    USERS ||--o{ COMMENTS : "user_id (FK)"
+    POSTS ||--o{ COMMENTS : "post_id (FK)"
+    USERS ||--o{ FOLLOWERS : "user_id (acting follower)"
+    USERS ||--o{ FOLLOWERS : "follower_id (followed user)"
+
+    ROLES {
+        bigint id PK
+        varchar name UK
+        int level
+        text description
+    }
+    USERS {
+        bigint id PK
+        varchar username UK
+        citext email UK
+        bytea password
+        timestamp created_at
+        timestamp updated_at
+        int role_id FK
+    }
+    POSTS {
+        bigint id PK
+        bigint user_id FK
+        varchar title
+        text content
+        varchar_array tags
+        timestamp created_at
+        timestamp updated_at
+    }
+    COMMENTS {
+        bigint id PK
+        bigint user_id FK
+        bigint post_id FK
+        text content
+        timestamp created_at
+        timestamp updated_at
+    }
+    FOLLOWERS {
+        bigint user_id PK,FK
+        bigint follower_id PK,FK
+        timestamp created_at
+    }

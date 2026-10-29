@@ -1,0 +1,37 @@
+%% Verified request path through the actual router and middleware. Shared source.
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant S as http.Server
+    participant R as chi Router
+    participant M as Middleware chain
+    participant H as Handler
+    participant ST as Storage
+    participant DB as PostgreSQL
+
+    C->>S: HTTP request
+    S->>R: ServeHTTP
+    R->>M: Heartbeat / RealIP / Logger / Recoverer
+    M->>M: app.LoggerMiddleware
+    alt protected /v1/users or /v1/posts route
+        M->>M: JWTAuthMiddleware
+        M->>ST: Users.GetByID(sub)
+        ST->>DB: SELECT user
+        DB-->>ST: row
+        ST-->>M: *User
+        M->>M: context.WithValue(USER_CTX, user)
+    end
+    opt PATCH/DELETE /v1/posts/{postID}
+        M->>ST: Posts.GetByID(postID)
+        ST->>DB: SELECT post
+        DB-->>ST: row
+        ST-->>M: *Post
+        M->>M: owner or RoleID==3 check
+    end
+    M->>H: next.ServeHTTP
+    H->>ST: storage method
+    ST->>DB: parameterized SQL
+    DB-->>ST: rows / rows affected
+    ST-->>H: structs or error
+    H->>M: response helper
+    M-->>C: HTTP status + JSON envelope

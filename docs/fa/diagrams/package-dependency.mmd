@@ -1,0 +1,38 @@
+%% Import graph derived from go list. Shared source.
+flowchart LR
+    cmdapi["cmd/api"]
+    cmdseed["cmd/seed"]
+    docs["docs"]
+    auth["internal/auth"]
+    consts["internal/consts"]
+    db["internal/db"]
+    dto["internal/dto"]
+    env["internal/env"]
+    response["internal/response"]
+    storage["internal/storage"]
+    utils["internal/utils"]
+    jwt["golang-jwt/jwt/v5"]
+    validator["go-playground/validator/v10"]
+    swag["swaggo/swag"]
+
+    cmdapi --> docs
+    cmdapi --> auth
+    cmdapi --> consts
+    cmdapi --> db
+    cmdapi --> dto
+    cmdapi --> env
+    cmdapi --> response
+    cmdapi --> storage
+    cmdapi --> utils
+
+    cmdseed --> db
+    cmdseed --> env
+    cmdseed --> storage
+
+    db --> consts
+    db --> storage
+    storage --> consts
+
+    auth --> jwt
+    utils --> validator
+    docs --> swag

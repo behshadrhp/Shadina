@@ -1,0 +1,33 @@
+%% Component view of the single Go API process. Shared source.
+flowchart TB
+    subgraph Process["cmd/api process"]
+        Main["main.go<br/>config, manual wiring, startup"]
+        Router["router.go<br/>chi routes and middleware order"]
+        MW["middleware.go<br/>request log, JWT auth, post ownership"]
+        Handlers["Handlers<br/>auth.go, uesrs.go, posts.go,<br/>followers.go, feeds.go, health.go"]
+        DTO["internal/dto<br/>request/response payloads"]
+        Response["internal/response<br/>JSON envelope"]
+        Utils["internal/utils<br/>ReadJson/WriteJson, validator"]
+        Storage["internal/storage<br/>Storage facade + SQL methods"]
+        Auth["internal/auth<br/>Authenticator + JWTAuthenticator"]
+        Consts["internal/consts<br/>timeouts, NOT_FOUND, USER_CTX"]
+        Docs["docs package<br/>generated Swagger template"]
+    end
+
+    DB[("PostgreSQL")]
+    Main --> Router
+    Main --> Auth
+    Main --> Storage
+    Main --> Docs
+    Router --> MW
+    Router --> Docs
+    MW --> Auth
+    MW --> Storage
+    MW --> Response
+    Handlers --> DTO
+    Handlers --> Response
+    Handlers --> Utils
+    Handlers --> Storage
+    Handlers --> Consts
+    Storage --> Consts
+    Storage --> DB

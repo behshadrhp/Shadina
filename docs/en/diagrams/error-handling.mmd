@@ -1,0 +1,35 @@
+%% Error mapping as implemented across handlers and middleware. Shared source.
+flowchart TD
+    A["Error occurs"] --> B{"Where?"}
+    B -->|"JSON decoding"| C["ReadJson error"]
+    B -->|"struct validation"| D["Validate.Struct error"]
+    B -->|"storage: sql.ErrNoRows"| E["consts.NOT_FOUND"]
+    B -->|"JWT parse/signature"| F["ValidateToken error"]
+    B -->|"missing/malformed Authorization"| G["UnauthorizedResponse"]
+    B -->|"post not owned by user"| H["UnauthorizedResponse"]
+
+    C --> C1{"Handler choice"}
+    C1 -->|"register/token/update"| C2["400 with code 4011/4013/4003"]
+    C1 -->|"create post"| C3["500 with code 5002"]
+    D --> D1{"Handler choice"}
+    D1 -->|"register/token/feeds/update"| D2["400 with validation text"]
+    D1 -->|"create post"| D3["500 with validation text"]
+    E --> E1{"Handler checks errors.Is?"}
+    E1 -->|"yes: posts/comments"| E2["404 envelope"]
+    E1 -->|"no: user retrieve/follow"| E3["500 with err.Error()"]
+    F --> F1["500 with err.Error() (5019)"]
+    G --> G1["401 envelope"]
+    H --> H1["401 envelope"]
+
+    C2 --> R["response.Respond"]
+    C3 --> R
+    D2 --> R
+    D3 --> R
+    E2 --> R
+    E3 --> R
+    F1 --> R
+    G1 --> R
+    H1 --> R
+    R --> J{"json.Encode succeeds?"}
+    J -->|"yes"| K["HTTP response"]
+    J -->|"no"| L["log.Fatalf -> process exits"]

@@ -1,0 +1,15 @@
+%% Post ownership/role decision implemented in UserPostAccessMiddleware. Shared source.
+flowchart TD
+    A["PATCH or DELETE /v1/posts/{postID}"] --> B["JWTAuthMiddleware"]
+    B -->|"missing or malformed header"| E401["401 envelope"]
+    B -->|"invalid token"| E500["500 envelope (current behavior)"]
+    B -->|"valid token"| C["Load user by claims.sub"]
+    C --> D["UserPostAccessMiddleware"]
+    D --> F["Posts.GetByID(postID)"]
+    F -->|"sql.ErrNoRows"| E404["404 post not found"]
+    F -->|"other error"| E500b["500 envelope"]
+    F -->|"found"| G{"user.ID == post.UserID?"}
+    G -->|"yes"| H["Continue to update/delete handler"]
+    G -->|"no"| I{"user.RoleID == 3?"}
+    I -->|"yes"| H2["Continue to handler, then current code also writes 401"]
+    I -->|"no"| E401b["401 access denied (4023)"]

@@ -1,0 +1,40 @@
+%% Token issuance and protected request validation. Shared source.
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant H as generateTokenHandler
+    participant US as UsersStorage
+    participant DB as PostgreSQL
+    participant A as JWTAuthenticator
+    participant MW as JWTAuthMiddleware
+
+    C->>H: POST /v1/auth/token {email, password}
+    H->>H: ReadJson (1 MiB limit, unknown fields rejected)
+    H->>H: Validate.Struct(payload)
+    H->>US: GetByEmail(email)
+    US->>DB: SELECT ... FROM users WHERE email=$1
+    DB-->>US: user row (or sql.ErrNoRows)
+    US-->>H: *User / NOT_FOUND / error
+    H->>H: ComparePassword (bcrypt)
+    alt invalid credentials
+        H-->>C: 400 internal_code 4017
+    else valid credentials
+        H->>A: GenerateToken(MapClaims)
+        A-->>H: HS256 token
+        H-->>C: 200 {data: token}
+    end
+
+    C->>MW: Protected request with Authorization: Bearer &lt;token&gt;
+    MW->>A: ValidateToken(token)
+    A-->>MW: *jwt.Token or error
+    alt token valid
+        MW->>US: GetByID(sub)
+        US->>DB: SELECT ... WHERE id=$1
+        DB-->>US: user row
+        MW->>MW: put *User in request context
+        MW-->>C: next handler response
+    else missing or malformed header
+        MW-->>C: 401 (4019 / 4020)
+    else token parse or signature error
+        MW-->>C: 500 with err.Error() (5019)
+    end

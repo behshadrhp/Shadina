@@ -1,0 +1,29 @@
+%% Development deployment actually supported by the repository. Shared source.
+flowchart LR
+    Dev["Developer workstation"]
+    Browser["Browser / curl"]
+
+    subgraph Compose["Docker Compose: docker-compose.yaml"]
+        PG["postgres:18.4<br/>container: shadina-postgres<br/>host :5454 -> container :5432"]
+        Vol["volume postgres_data<br/>/var/lib/postgresql"]
+        PG --- Vol
+    end
+
+    subgraph Local["Local process"]
+        API["Shadina API<br/>go run ./cmd/api<br/>:8000"]
+        Logs["logs/app.log<br/>logs/error.log"]
+    end
+
+    subgraph Missing["Not provided in the repository"]
+        AppImage["No Dockerfile / app container"]
+        Proxy["No TLS terminator / reverse proxy"]
+        Metrics["No metrics or tracing backend"]
+    end
+
+    Dev -->|"make up / docker compose up"| Compose
+    Dev -->|"go run"| API
+    Browser -->|"HTTP/JSON"| API
+    Browser -->|"Swagger UI"| API
+    API -->|"DATABASE_ADDR<br/>127.0.0.1:5454"| PG
+    API -->|"zap"| Logs
+    Missing -.->|"not implemented"| Local

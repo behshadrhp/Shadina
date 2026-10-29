@@ -1,0 +1,15 @@
+%% Shadina system context. Shared source for English and Persian docs.
+flowchart LR
+    Client["API client / browser / Swagger UI"]
+    API["Shadina API<br/>Go 1.25.4 + chi<br/>HTTP :8000 (default)"]
+    DB[("PostgreSQL 18.4<br/>database: shadina_db")]
+    Logs["Local files<br/>logs/app.log<br/>logs/error.log"]
+    Swagger["Swagger UI<br/>/v1/swagger/*"]
+
+    Client -->|"HTTP/JSON"| API
+    Client -->|"HTTP"| Swagger
+    Swagger -.->|"served by the API process"| API
+    API -->|"database/sql + lib/pq"| DB
+    API -->|"zap file sink"| Logs
+
+    Note["No external services, message broker, cache,<br/>identity provider, or object storage are configured."]
